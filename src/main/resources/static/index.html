@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DBFusion vr.1.1.2</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="top">
+  <div class="logo"><span class="mark">DB</span><span>DBFusion</span><span class="ver">vr.1.1.2</span></div>
+  <div class="links">
+    <span id="active">User: none</span>
+    <a href="#" data-p="home">Home</a>
+    <button id="theme" title="Switch light/dark theme">Theme</button>
+    <a href="#" id="help">Help</a>
+    <a href="#" id="logout">Logout</a>
+  </div>
+</header>
+<nav id="tabs">
+  <a href="#" data-p="home" class="on">Home</a>
+  <a href="#" data-p="admin">Administration</a>
+  <a href="#" data-p="browser">Object Browser</a>
+  <a href="#" data-p="sql">SQL Commands</a>
+  <a href="#" data-p="oracle">Oracle Tools</a>
+</nav>
+<div id="crumbs"></div>
+<div id="msg"><span id="status"></span></div>
+
+<div id="pages">
+  <section class="page" id="p-home">
+    <div class="cols">
+      <div class="box main">
+        <h4>Connections</h4>
+        <div class="inner">
+          <p>Connect to a database to use Administration, Object Browser and SQL Commands.</p>
+          <p><button id="newConn" class="primary">New connection</button></p>
+          <h5>Open connections</h5>
+          <ul id="conns" class="plain"><li class="empty">None yet.</li></ul>
+          <h5>Saved connections</h5>
+          <ul id="saved" class="plain"><li class="empty">Connections you use are saved here (without passwords).</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="p-admin" hidden>
+    <div class="cols">
+      <div class="main">
+        <div class="tiles">
+          <a href="#" class="tile" data-a="storage"><span class="ico">&#9636;</span>Storage</a>
+          <a href="#" class="tile" data-a="memory"><span class="ico">&#9637;</span>Memory</a>
+          <a href="#" class="tile" data-a="users"><span class="ico">&#9786;</span>Database Users</a>
+          <a href="#" class="tile" data-a="monitor"><span class="ico">&#9645;</span>Monitor</a>
+          <a href="#" class="tile" data-a="about"><span class="ico">i</span>About Database</a>
+        </div>
+        <div id="adminResult"></div>
+      </div>
+      <div class="box side">
+        <h4>Tasks</h4>
+        <ul class="plain">
+          <li><a href="#" id="tPw">Change My Password</a></li>
+          <li><a href="#" id="tNew">New connection</a></li>
+          <li><a href="#" id="logout2">Disconnect</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="p-browser" hidden>
+    <div class="tree box">
+      <h4 id="schemaTitle">Tables</h4>
+      <div class="treebar"><input id="tfilter" placeholder="Filter" aria-label="Filter tables"><button id="newTable" title="Create a table">New table</button></div>
+      <ul id="schema" class="plain"><li class="empty">Select a connection.</li></ul>
+    </div>
+    <div class="slot">
+      <div id="results">
+        <div class="rbar">
+          <div class="rtabs">
+            <button data-tab="table" class="on">Query Result</button>
+            <button data-tab="chart">Chart</button>
+            <button data-tab="history">History</button>
+            <button data-tab="output">Output</button>
+          </div>
+          <span id="edit" hidden><button id="addRow">Add row</button><button id="addCol">Add column</button><button id="dropT">Drop table</button></span>
+          <span class="grow"></span>
+          <input id="filter" placeholder="Filter rows" aria-label="Filter rows">
+          <button id="csv">Export CSV</button>
+          <button id="json">Export JSON</button>
+          <span id="count"></span>
+        </div>
+        <div id="table" class="pane"><p class="empty">Run a statement or click a table to see rows here.</p></div>
+        <div id="chart" class="pane" hidden>
+          <div class="ctl">
+            <label>Type <select id="ctype"><option>bar</option><option>line</option><option>pie</option><option>doughnut</option></select></label>
+            <label>Labels <select id="clabel"></select></label>
+            <label>Values <select id="cvalue"></select></label>
+          </div>
+          <div class="cbox"><canvas></canvas></div>
+        </div>
+        <div id="history" class="pane" hidden></div>
+        <div id="output" class="pane" hidden><pre id="outtxt">Nothing yet. PL/SQL output (DBMS_OUTPUT) and execution plans appear here.</pre></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="p-oracle" hidden>
+    <div class="tree box">
+      <h4>Schema objects</h4>
+      <div class="treebar"><select id="oType"></select><button id="oRefresh" title="Reload objects">Reload</button></div>
+      <div class="treebar"><input id="oFilter" placeholder="Filter objects" aria-label="Filter objects"></div>
+      <ul id="oList" class="plain"><li class="empty">Connect to an Oracle database (Home) to use these tools.</li></ul>
+    </div>
+    <div class="slot">
+      <div class="rbar"><div class="rtabs" id="oTabs"></div></div>
+      <div id="oBody" class="pane"><p class="empty">Pick an object to see its DDL, columns, indexes, constraints and statistics.</p></div>
+    </div>
+  </section>
+
+  <section class="page" id="p-sql" hidden>
+    <div class="sqlbar"><button id="run" class="primary">Run (Ctrl+Enter)</button><button id="addTab">New worksheet</button><button id="explain">Explain plan</button><button id="commit">Commit</button><button id="rollback">Rollback</button><label><input type="checkbox" id="autoc" checked> Auto-commit</label><select id="snip"></select></div>
+    <div id="qtabs"></div>
+    <div id="editor"></div>
+    <div id="split" title="Drag to resize"></div>
+    <div class="slot"></div>
+  </section>
+</div>
+
+<footer id="foot">DBFusion vr.1.1.2</footer>
+
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h3>New database connection</h3>
+    <div class="body">
+      <label>Type
+        <select name="type">
+          <option value="postgresql">PostgreSQL</option>
+          <option value="mysql">MySQL</option>
+          <option value="oracle">Oracle</option>
+          <option value="mongodb">MongoDB</option>
+        </select></label>
+      <div class="row">
+        <label>Host <input name="host" value="localhost"></label>
+        <label>Port <input name="port" type="number" value="5432"></label>
+      </div>
+      <label><span id="dbLabel">Database</span> <input name="database"></label>
+      <div class="row">
+        <label>Username <input name="username" autocomplete="off"></label>
+        <label>Password <input name="password" type="password" autocomplete="off"></label>
+      </div>
+      <label id="uriRow" hidden>Connection string (optional) <input name="uri" placeholder="mongodb+srv://..."></label>
+      <p id="err" class="err"></p>
+      <div class="row end">
+        <button type="button" id="cancel">Cancel</button>
+        <button class="primary" value="go">Connect</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="d2">
+  <form id="d2f" method="dialog">
+    <h3 id="d2t"></h3>
+    <div class="body">
+      <div id="d2b"></div><p id="d2e" class="err"></p>
+      <div class="row end"><button type="button" id="d2c">Cancel</button><button class="primary">Save</button></div>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<script src="app.js"></script>
+<script src="oracle.js"></script>
+</body>
+</html>

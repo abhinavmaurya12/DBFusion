@@ -1,0 +1,7 @@
+com\udbms\OracleController.class
+com\udbms\ConnectRequest.class
+com\udbms\DbService$Session.class
+com\udbms\DbController.class
+com\udbms\DbService.class
+com\udbms\EditService.class
+com\udbms\UniversalDbApplication.class
