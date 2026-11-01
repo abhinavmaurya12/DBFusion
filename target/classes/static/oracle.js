@@ -25,12 +25,14 @@ function drawObjects() {
     li.onclick = () => openObj(r); ul.appendChild(li);
   });
 }
-const CODE = ['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'TRIGGER', 'TYPE', 'VIEW'];
+const CODE = ['PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'TRIGGER', 'TYPE', 'TYPE BODY', 'VIEW'];
 function openObj(r) {
   pick = r; drawObjects();
-  const [, type] = r, tbl = type === 'TABLE';
-  const ts = [['ddl', 'DDL'], ...(tbl ? [['cols', 'Columns'], ['idx', 'Indexes'], ['con', 'Constraints'], ['stats', 'Statistics']] : []),
-    ...(CODE.includes(type) ? [['err', 'Compile errors']] : []), ...(tbl || type === 'VIEW' ? [['data', 'Open data']] : [])];
+  const [, type] = r, tbl = type === 'TABLE', code = CODE.includes(type);
+  const ts = [['ddl', 'DDL'], ...(tbl ? [['cols', 'Columns'], ['idx', 'Indexes'], ['con', 'Constraints'], ['stats', 'Statistics'], ['trg', 'Triggers']] : []),
+    ...(tbl || type === 'VIEW' ? [['prv', 'Privileges']] : []), ...(tbl || code ? [['dep', 'Dependencies']] : []),
+    ...(code ? [['err', 'Compile errors']] : []), ...(type === 'SEQUENCE' ? [['seq', 'Sequence info']] : []),
+    ...(tbl || type === 'VIEW' ? [['data', 'Open data']] : [])];
   $('#oTabs').innerHTML = ts.map(([k, l]) => `<button data-k="${k}">${l}</button>`).join('');
   $('#oTabs').querySelectorAll('button').forEach(b => b.onclick = () => showTab(b.dataset.k));
   showTab('ddl');
@@ -43,15 +45,33 @@ async function showTab(k) {
   try {
     if (k === 'ddl') {
       const ddl = (await oapi(`/ddl?name=${enc(name)}&type=${enc(type)}`)).ddl.trim();
-      box.innerHTML = `<pre class="code">${esc(ddl)}</pre><p class="acts"><button id="oCopy">Copy DDL</button><button id="oEdit">Open in SQL editor</button></p>`;
+      box.innerHTML = `<pre class="code">${esc(ddl)}</pre><p class="acts"><button id="oCopy">Copy DDL</button><button id="oEdit">Open in SQL editor</button>${CODE.includes(type) ? '<button id="oComp">Recompile</button>' : ''}</p>`;
       $('#oCopy').onclick = () => navigator.clipboard?.writeText(ddl).then(() => setStatus('DDL copied.'));
       $('#oEdit').onclick = () => { go('sql'); setText(ddl); };
+      if ($('#oComp')) $('#oComp').onclick = async () => {
+        try { const c = await post('/oracle/compile', { name, type }); await loadObjects();
+          setStatus(c.status === 'VALID' ? 'Compiled: object is VALID.' : 'Compiled with errors. Open the Compile errors tab.', c.status !== 'VALID'); }
+        catch (e) { setStatus(e.message, true); }
+      };
     } else if (k === 'err') {
       const r = await oapi('/errors?name=' + enc(name));
       box.innerHTML = r.rows.length ? gridHtml(r) : '<p class="empty">No compile errors.</p>';
+    } else if (k === 'trg') {
+      box.innerHTML = gridHtml(await oapi('/triggers?table=' + enc(name)));
+    } else if (k === 'prv') {
+      box.innerHTML = gridHtml(await oapi('/privileges?name=' + enc(name)));
+    } else if (k === 'seq') {
+      box.innerHTML = gridHtml(await oapi('/sequence?name=' + enc(name)));
+    } else if (k === 'dep') {
+      const d = await oapi(`/dependencies?name=${enc(name)}&type=${enc(type)}`);
+      box.innerHTML = '<h5 class="sub">Uses</h5>' + gridHtml(d.uses) + '<h5 class="sub">Used by</h5>' + gridHtml(d.usedBy);
     } else {
       const d = await oapi('/describe?table=' + enc(name));
       box.innerHTML = gridHtml(d[{ cols: 'columns', idx: 'indexes', con: 'constraints', stats: 'stats' }[k]]);
+      if (k === 'stats') {
+        box.insertAdjacentHTML('beforeend', '<p class="acts" style="padding-top:12px"><button id="oGather">Gather statistics</button></p>');
+        $('#oGather').onclick = async () => { try { await post('/oracle/stats', { name }); setStatus('Statistics gathered.'); showTab('stats'); } catch (e) { setStatus(e.message, true); } };
+      }
     }
     setStatus('');
   } catch (e) { box.innerHTML = ''; setStatus(e.message, true); }
@@ -61,22 +81,26 @@ $('#oRefresh').onclick = loadObjects;
 const _go = go; go = (p, x) => { _go(p, x); if (p === 'oracle') loadObjects(); };
 
 // Output tab: DBMS_OUTPUT text and execution plans
-const showOut = text => { $('#outtxt').textContent = text; document.querySelector('.rtabs [data-tab=output]').click(); };
-const _show = show; show = r => { _show(r); if (r.output) showOut(r.output); };
+const showOut = text => { $('#outtxt').textContent = text; flag('output', false); activateTab('output'); };
+const _show = show;
+show = r => {
+  _show(r);
+  if (r.output) { $('#outtxt').textContent = r.output; if (r.columns || r.error) flag('output', true); else activateTab('output'); }
+};
 $('#explain').onclick = async () => {
-  if (!isOra()) return setStatus('Explain plan works on Oracle connections.', true);
-  const q = (editor.getModel().getValueInRange(editor.getSelection()).trim() || editor.getValue()).trim();
+  if (!isOra()) return setStatus('Explain plan works on Oracle and MySQL connections.', true);
+  const q = currentSql();
   setStatus('Building plan…');
   try { showOut((await post('/explain', { query: q })).plan); setStatus('Execution plan ready.'); } catch (e) { setStatus(e.message, true); }
 };
 
 // Transactions
 $('#autoc').onchange = async e => {
-  try { await post('/autocommit', { on: e.target.checked }); active.auto = e.target.checked;
+  try { await post('/autocommit', { on: e.target.checked }); active.auto = e.target.checked; if (e.target.checked) setDirty(false);
     setStatus(e.target.checked ? 'Auto-commit is on.' : 'Auto-commit is off. Use Commit or Rollback to finish your changes.'); }
   catch (err) { e.target.checked = !e.target.checked; setStatus(err.message, true); }
 };
-const tx = (path, msg) => async () => { if (!active) return setStatus('Connect to a database first.', true); try { await post(path); setStatus(msg); } catch (e) { setStatus(e.message, true); } };
+const tx = (path, msg) => async () => { if (!active) return setStatus('Connect to a database first.', true); try { await post(path); setDirty(false); setStatus(msg); } catch (e) { setStatus(e.message, true); } };
 $('#commit').onclick = tx('/commit', 'Changes committed.');
 $('#rollback').onclick = tx('/rollback', 'Changes rolled back.');
 const _sel = select; select = async c => { await _sel(c); $('#autoc').checked = c.auto !== false; };
@@ -91,6 +115,9 @@ const SNIPS = {
   'Foreign keys': "SELECT c.table_name, c.constraint_name, r.table_name AS references_table FROM user_constraints c JOIN user_constraints r ON r.constraint_name = c.r_constraint_name WHERE c.constraint_type = 'R'",
   'Active sessions (needs DBA)': "SELECT sid, serial# AS serial, username, status, program FROM v$session WHERE username IS NOT NULL",
   'Locks (needs DBA)': "SELECT s.sid, s.username, l.type, l.lmode, l.request FROM v$lock l JOIN v$session s ON s.sid = l.sid WHERE s.username IS NOT NULL",
+  'DESC a table (SQL*Plus)': "DESC user_tables",
+  'Compilation errors': "SHOW ERRORS",
+  'Create user template': "CREATE USER app_user IDENTIFIED BY \"ChangeMe_123\"\n  DEFAULT TABLESPACE users TEMPORARY TABLESPACE temp QUOTA UNLIMITED ON users;\nGRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE TO app_user;",
   'First 10 rows (FETCH FIRST)': "SELECT * FROM user_tables FETCH FIRST 10 ROWS ONLY",
   'PL/SQL: DBMS_OUTPUT hello': "BEGIN\n  FOR i IN 1..3 LOOP\n    DBMS_OUTPUT.PUT_LINE('Hello from DBFusion, row ' || i);\n  END LOOP;\nEND;"
 };
@@ -107,6 +134,7 @@ const ORA_USER = {
 };
 const _admin = admin;
 admin = async key => {
+  if (isOra() && key === 'users') { go('users'); return; }
   if (!isOra() || key === 'about') return _admin(key);
   const box = $('#adminResult'); go('admin', NAMES[key]); let err;
   for (const sql of [ADMIN.oracle[key], ORA_USER[key]]) {
@@ -117,3 +145,21 @@ admin = async key => {
   }
   box.innerHTML = ''; setStatus(err.message, true);
 };
+
+// Oracle server tools: recompile invalid objects, scheduler jobs, recycle bin
+document.querySelectorAll('#oSrv button').forEach(b => b.onclick = async () => {
+  if (!isOra()) return setStatus('Connect to an Oracle database first.', true);
+  const k = b.dataset.s, box = $('#oBody');
+  try {
+    if (k === 'compile') {
+      const r = await post('/oracle/compile-all'); await loadObjects();
+      return setStatus(r.tried ? `Recompiled ${r.tried} object(s). ${r.stillInvalid} still invalid.` : 'No invalid objects found.', r.stillInvalid > 0);
+    }
+    if (k === 'purge') {
+      if (!confirm('Permanently empty your recycle bin? Dropped tables cannot be restored afterwards.')) return;
+      await post('/oracle/recyclebin/purge'); return setStatus('Recycle bin purged.');
+    }
+    pick = null; drawObjects(); $('#oTabs').innerHTML = '';
+    box.innerHTML = gridHtml(await oapi(k === 'jobs' ? '/jobs' : '/recyclebin')); setStatus('');
+  } catch (e) { setStatus(e.message, true); }
+});

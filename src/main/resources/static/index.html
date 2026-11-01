@@ -3,37 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DBFusion vr.1.1.2</title>
+<title>DBFusion vr.1.2.0</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header id="top">
-  <div class="logo"><span class="mark">DB</span><span>DBFusion</span><span class="ver">vr.1.1.2</span></div>
+  <div class="logo"><img class="mark" src="logo-mark.svg" alt="" width="34" height="34"><span>DBFusion</span><span class="ver">vr.1.2.0</span></div>
   <div class="links">
+    <button id="cmdBtn" class="ghost" title="Command palette (Ctrl+K)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search commands</span><kbd>Ctrl K</kbd></button>
     <span id="active">User: none</span>
+    <button id="theme" class="icon" title="Switch light/dark theme" aria-label="Switch theme">Theme</button>
     <a href="#" data-p="home">Home</a>
-    <button id="theme" title="Switch light/dark theme">Theme</button>
+    <a href="#" data-p="dev" id="devBtn">Developer</a>
     <a href="#" id="help">Help</a>
     <a href="#" id="logout">Logout</a>
   </div>
 </header>
 <nav id="tabs">
-  <a href="#" data-p="home" class="on">Home</a>
-  <a href="#" data-p="admin">Administration</a>
-  <a href="#" data-p="browser">Object Browser</a>
-  <a href="#" data-p="sql">SQL Commands</a>
-  <a href="#" data-p="oracle">Oracle Tools</a>
+  <a href="#" data-p="home" class="on"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+  <a href="#" data-p="admin"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2.2"/><circle cx="9" cy="12" r="2.2"/><circle cx="17" cy="18" r="2.2"/></svg>Administration</a>
+  <a href="#" data-p="browser"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Object Browser</a>
+  <a href="#" data-p="sql"><svg class="i" viewBox="0 0 24 24"><path d="M4 17l6-5-6-5M12 19h8"/></svg>SQL Commands</a>
+  <a href="#" data-p="oracle"><svg class="i" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Oracle Tools</a>
+  <a href="#" data-p="users"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M21.5 20c0-2.7-1.6-4.7-4.2-5.5"/></svg>User Manager</a>
+  <a href="#" data-p="mysql"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/></svg>MySQL Tools</a>
 </nav>
 <div id="crumbs"></div>
-<div id="msg"><span id="status"></span></div>
+<div id="msg" role="status" aria-live="polite" title="Click to dismiss"><span id="status"></span></div>
 
 <div id="pages">
   <section class="page" id="p-home">
+    <div class="hero">
+      <div>
+        <h2>Welcome to DBFusion</h2>
+        <p>One workbench for Oracle, MySQL, PostgreSQL and MongoDB. Pick an engine to connect.</p>
+      </div>
+      <div class="engines">
+        <button class="engine oracle" data-type="oracle"><b>Oracle</b><small>Tools, PL/SQL, users</small></button>
+        <button class="engine mysql" data-type="mysql"><b>MySQL</b><small>Tools, explain, status</small></button>
+        <button class="engine postgresql" data-type="postgresql"><b>PostgreSQL</b><small>SQL and browser</small></button>
+        <button class="engine mongodb" data-type="mongodb"><b>MongoDB</b><small>JSON queries</small></button>
+      </div>
+    </div>
     <div class="cols">
       <div class="box main">
         <h4>Connections</h4>
         <div class="inner">
-          <p>Connect to a database to use Administration, Object Browser and SQL Commands.</p>
           <p><button id="newConn" class="primary">New connection</button></p>
           <h5>Open connections</h5>
           <ul id="conns" class="plain"><li class="empty">None yet.</li></ul>
@@ -60,6 +76,7 @@
         <h4>Tasks</h4>
         <ul class="plain">
           <li><a href="#" id="tPw">Change My Password</a></li>
+          <li id="tUserLi" hidden><a href="#" id="tUser">Create Oracle user</a></li>
           <li><a href="#" id="tNew">New connection</a></li>
           <li><a href="#" id="logout2">Disconnect</a></li>
         </ul>
@@ -78,28 +95,44 @@
         <div class="rbar">
           <div class="rtabs">
             <button data-tab="table" class="on">Query Result</button>
+            <button data-tab="messages">Messages<i class="dot" hidden></i></button>
             <button data-tab="chart">Chart</button>
             <button data-tab="history">History</button>
-            <button data-tab="output">Output</button>
+            <button data-tab="output">Output<i class="dot" hidden></i></button>
           </div>
-          <span id="edit" hidden><button id="addRow">Add row</button><button id="addCol">Add column</button><button id="dropT">Drop table</button></span>
+          <span id="edit" hidden><button id="addRow">Add row</button><button id="addCol">Add column</button><button id="dropT" class="danger">Drop table</button></span>
           <span class="grow"></span>
           <input id="filter" placeholder="Filter rows" aria-label="Filter rows">
-          <button id="csv">Export CSV</button>
-          <button id="json">Export JSON</button>
+          <details class="menu" id="exp"><summary>Export</summary>
+            <div class="mi">
+              <button data-x="csv">Download CSV</button>
+              <button data-x="json">Download JSON</button>
+              <button data-x="sql">Download INSERT script</button>
+              <button data-x="tsv">Copy as TSV</button>
+              <button data-x="md">Copy as Markdown</button>
+            </div>
+          </details>
           <span id="count"></span>
         </div>
-        <div id="table" class="pane"><p class="empty">Run a statement or click a table to see rows here.</p></div>
-        <div id="chart" class="pane" hidden>
-          <div class="ctl">
-            <label>Type <select id="ctype"><option>bar</option><option>line</option><option>pie</option><option>doughnut</option></select></label>
-            <label>Labels <select id="clabel"></select></label>
-            <label>Values <select id="cvalue"></select></label>
+        <div class="panes">
+          <div id="table" class="pane"><p class="empty">Run a statement or click a table to see rows here.</p></div>
+          <div id="messages" class="pane" hidden><p class="empty">Run a script to see the result of each statement here.</p></div>
+          <div id="chart" class="pane" hidden>
+            <div class="ctl">
+              <label>Type <select id="ctype"><option>bar</option><option>line</option><option>pie</option><option>doughnut</option></select></label>
+              <label>Labels <select id="clabel"></select></label>
+              <label>Values <select id="cvalue"></select></label>
+            </div>
+            <div class="cbox"><canvas></canvas></div>
           </div>
-          <div class="cbox"><canvas></canvas></div>
+          <div id="history" class="pane" hidden></div>
+          <div id="output" class="pane" hidden><pre id="outtxt">Nothing yet. PL/SQL output (DBMS_OUTPUT) and execution plans appear here.</pre></div>
+          <aside id="drawer" hidden>
+            <header><b id="drTitle">Row</b><span class="grow"></span><button id="drPrev" title="Previous row">&#8593;</button><button id="drNext" title="Next row">&#8595;</button><button id="drCopy" title="Copy row as JSON">Copy JSON</button><button id="drClose" class="x" title="Close">&times;</button></header>
+            <div id="drBody"></div>
+          </aside>
         </div>
-        <div id="history" class="pane" hidden></div>
-        <div id="output" class="pane" hidden><pre id="outtxt">Nothing yet. PL/SQL output (DBMS_OUTPUT) and execution plans appear here.</pre></div>
+        <div id="rfoot"><span id="rstat">Ready</span><span id="rflags"></span><span class="grow"></span><span id="sel"></span></div>
       </div>
     </div>
   </section>
@@ -112,13 +145,102 @@
       <ul id="oList" class="plain"><li class="empty">Connect to an Oracle database (Home) to use these tools.</li></ul>
     </div>
     <div class="slot">
-      <div class="rbar"><div class="rtabs" id="oTabs"></div></div>
+      <div class="rbar"><div class="rtabs" id="oTabs"></div><span class="grow"></span><span class="srv" id="oSrv"><button data-s="compile" title="Recompile every invalid object">Recompile invalid</button><button data-s="jobs">Scheduler jobs</button><button data-s="bin">Recycle bin</button><button data-s="purge">Purge recycle bin</button></span></div>
       <div id="oBody" class="pane"><p class="empty">Pick an object to see its DDL, columns, indexes, constraints and statistics.</p></div>
     </div>
   </section>
 
+  <section class="page" id="p-users" hidden>
+    <div class="ubar">
+      <button id="uCreate" class="primary">+ Create user</button>
+      <button id="uRefresh">Reload</button>
+      <input id="uFilter" placeholder="Filter users" aria-label="Filter users">
+      <label class="switch sm"><input type="checkbox" id="uSys"><span></span>Show Oracle-maintained</label>
+      <span class="grow"></span><span id="uCount" class="muted"></span>
+    </div>
+    <div id="uBanner" hidden></div>
+    <div class="ugrid">
+      <div class="pane" id="uList"><p class="empty">Connect to an Oracle database as SYSTEM (Home) to manage users.</p></div>
+      <aside class="box" id="uSide" hidden></aside>
+    </div>
+  </section>
+
+  <section class="page" id="p-dev" hidden>
+    <div class="dev">
+      <div class="devhero">
+        <div class="devav" aria-hidden="true">AM</div>
+        <div class="devid">
+          <h2>Abhinav Maurya</h2>
+          <p class="muted">@abhinavmaurya12 &middot; Developer of DBFusion</p>
+          <p>Hi! &#128075; I'm the developer behind DBFusion, a multi-database workbench for Oracle, MySQL, PostgreSQL and MongoDB with a SQL editor, object browser and Oracle user manager. I enjoy building useful tools and sharing my code with others.</p>
+          <div class="devlinks">
+            <a class="btn primary" href="https://github.com/abhinavmaurya12" target="_blank" rel="noopener noreferrer">View GitHub profile</a>
+            <a class="btn" href="https://github.com/abhinavmaurya12?tab=repositories" target="_blank" rel="noopener noreferrer">&#128193; Repositories</a>
+            <a class="btn" href="https://abhinavmaurya12.github.io/LinkForge/" target="_blank" rel="noopener noreferrer">&#128640; LinkForge</a>
+            <a class="btn" href="https://abhinavmaurya12.github.io/ReplicaX/" target="_blank" rel="noopener noreferrer">&#129516; ReplicaX</a>
+            <a class="btn" href="https://github.com/abhinavmaurya12?tab=followers" target="_blank" rel="noopener noreferrer">&#11088; Follow</a>
+          </div>
+        </div>
+      </div>
+      <div class="devgrid">
+        <div class="box"><h4>&#128104;&#8205;&#128187; About me</h4><div class="inner"><p>Developer and open-source enthusiast who likes turning ideas into working software.</p></div></div>
+        <div class="box"><h4>&#128640; About DBFusion</h4><div class="inner"><p>Connect to Oracle, MySQL, PostgreSQL and MongoDB, run SQL scripts, browse and edit data, chart and export results, and create and manage Oracle users, all from one workbench.</p></div></div>
+        <div class="box"><h4>Connect</h4><div class="inner devlinks">
+          <a class="btn" href="https://github.com/abhinavmaurya12" target="_blank" rel="noopener noreferrer">&#128025; GitHub</a>
+          <a class="btn" href="https://www.linkedin.com/in/abhinavmaurya1/" target="_blank" rel="noopener noreferrer">&#128188; LinkedIn</a>
+          <a class="btn" href="https://www.instagram.com/_abhinav_830_" target="_blank" rel="noopener noreferrer">&#128248; Instagram</a>
+        </div></div>
+      </div>
+      <h3 class="devh">More projects</h3>
+      <div class="devgrid two">
+        <div class="box proj"><h4>LinkForge</h4><div class="inner"><b>All My Projects. One Destination. &#128640;</b>
+          <p>LinkForge is a centralized showcase for my live websites and web development projects. It brings all my deployed projects together in one place, allowing visitors to explore my work and access live demos without searching through multiple repositories.</p>
+          <a class="btn primary" href="https://abhinavmaurya12.github.io/LinkForge/" target="_blank" rel="noopener noreferrer">Visit LinkForge &#8599;</a></div></div>
+        <div class="box proj"><h4>&#128640; ReplicaX</h4><div class="inner"><b>One Platform. Multiple Website Replicas.</b>
+          <p>ReplicaX is a web development project dedicated to recreating and exploring popular website designs through frontend development. It serves as a growing collection of website replicas built to practice UI/UX design, responsive layouts, and modern web development techniques.</p>
+          <a class="btn primary" href="https://abhinavmaurya12.github.io/ReplicaX/" target="_blank" rel="noopener noreferrer">Visit ReplicaX &#8599;</a></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="p-mysql" hidden>
+    <div class="tree box">
+      <h4>Schema objects</h4>
+      <div class="treebar"><select id="mDb" aria-label="Database"></select><button id="mRefresh" title="Reload objects">Reload</button></div>
+      <div class="treebar"><select id="mType" aria-label="Object type"></select></div>
+      <div class="treebar"><input id="mFilter" placeholder="Filter objects" aria-label="Filter objects"></div>
+      <ul id="mList" class="plain"><li class="empty">Connect to a MySQL database (Home) to use these tools.</li></ul>
+    </div>
+    <div class="slot">
+      <div class="rbar"><div class="rtabs" id="mTabs"></div><span class="grow"></span>
+        <span class="srv" id="mSrv"><button data-s="status">Server status</button><button data-s="procs">Processlist</button><button data-s="grants">My grants</button><input id="mVar" placeholder="Variable filter" aria-label="Variable filter"><button data-s="vars">Variables</button></span></div>
+      <div id="mBody" class="pane"><p class="empty">Pick an object to see its DDL, columns, indexes, constraints, statistics and triggers, or use the server tools above.</p></div>
+    </div>
+  </section>
+
   <section class="page" id="p-sql" hidden>
-    <div class="sqlbar"><button id="run" class="primary">Run (Ctrl+Enter)</button><button id="addTab">New worksheet</button><button id="explain">Explain plan</button><button id="commit">Commit</button><button id="rollback">Rollback</button><label><input type="checkbox" id="autoc" checked> Auto-commit</label><select id="snip"></select></div>
+    <div class="sqlbar">
+      <div class="grp">
+        <button id="run" class="primary" title="Run the statement at the cursor, or the selection (Ctrl+Enter)">&#9654; Run</button>
+        <button id="runAll" title="Run every statement in the worksheet (F5)">Run script</button>
+        <button id="stop" class="danger" hidden title="Cancel the running statement">&#9632; Stop</button>
+      </div>
+      <div class="grp">
+        <button id="addTab">New worksheet</button>
+        <button id="format" title="Format SQL (Ctrl+Shift+F)">Format</button>
+        <button id="explain">Explain plan</button>
+      </div>
+      <div class="grp">
+        <button id="commit">Commit</button><button id="rollback">Rollback</button>
+        <label class="switch sm"><input type="checkbox" id="autoc" checked><span></span>Auto-commit</label>
+        <span id="txPill" class="pill warn" hidden>Uncommitted changes</span>
+      </div>
+      <div class="grp">
+        <select id="maxRows" title="Maximum rows to fetch" aria-label="Row limit"><option value="100">100 rows</option><option value="500">500 rows</option><option value="1000" selected>1000 rows</option><option value="5000">5000 rows</option><option value="20000">20000 rows</option></select>
+        <select id="qTimeout" title="Stop statements that run longer than this" aria-label="Timeout"><option value="0">No timeout</option><option value="30">30 s</option><option value="60">60 s</option><option value="300">5 min</option></select>
+        <select id="snip"></select>
+      </div>
+    </div>
     <div id="qtabs"></div>
     <div id="editor"></div>
     <div id="split" title="Drag to resize"></div>
@@ -126,7 +248,7 @@
   </section>
 </div>
 
-<footer id="foot">DBFusion vr.1.1.2</footer>
+<footer id="foot">DBFusion vr.1.2.0 &middot; Ctrl+Enter runs the statement at the cursor &middot; F5 runs the whole script &middot; Ctrl+K opens commands</footer>
 
 <dialog id="dlg">
   <form method="dialog" id="form">
@@ -143,11 +265,15 @@
         <label>Host <input name="host" value="localhost"></label>
         <label>Port <input name="port" type="number" value="5432"></label>
       </div>
-      <label><span id="dbLabel">Database</span> <input name="database"></label>
+      <label><span id="dbLabel">Database</span> <input name="database" list="oraDbs"></label>
+      <datalist id="oraDbs"><option value="XEPDB1"><option value="XE"><option value="FREEPDB1"><option value="FREE"><option value="ORCLPDB1"><option value="ORCL"></datalist>
+      <small id="dbHint" class="hint"></small>
       <div class="row">
         <label>Username <input name="username" autocomplete="off"></label>
         <label>Password <input name="password" type="password" autocomplete="off"></label>
       </div>
+      <label id="roleRow" hidden>Connect as
+        <select name="role"><option value="">Normal (SYSTEM and other users)</option><option value="sysdba">SYSDBA (needed for SYS)</option><option value="sysoper">SYSOPER</option></select></label>
       <label id="uriRow" hidden>Connection string (optional) <input name="uri" placeholder="mongodb+srv://..."></label>
       <p id="err" class="err"></p>
       <div class="row end">
@@ -168,9 +294,35 @@
   </form>
 </dialog>
 
+<dialog id="dUser" class="wide">
+  <form id="uForm" method="dialog" autocomplete="off">
+    <h3>Create Oracle user <small id="uWho"></small></h3>
+    <div class="body" id="uBody"></div>
+  </form>
+</dialog>
+
+<dialog id="cmdk">
+  <input id="cmdIn" placeholder="Type a command, page, table or snippet…" aria-label="Command palette" autocomplete="off">
+  <ul id="cmdList"></ul>
+</dialog>
+
+<dialog id="dHelp">
+  <h3>Help and shortcuts</h3>
+  <div class="body helpbody">
+    <h5>SQL Commands</h5>
+    <p><kbd>Ctrl</kbd>+<kbd>Enter</kbd> run the statement at the cursor (or the selection). <kbd>F5</kbd> run the whole script. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> format. Statements end with <code>;</code>. In Oracle, end PL/SQL blocks with a line holding only <code>/</code>.</p>
+    <p>SQL*Plus commands work in Oracle: <code>DESC table</code>, <code>SHOW USER</code>, <code>SHOW ERRORS</code>, <code>EXEC proc(1)</code>, <code>SET SERVEROUTPUT ON</code>, <code>PROMPT text</code>.</p>
+    <h5>Other pages</h5>
+    <p>Object Browser: click a table, double-click a cell to edit it. Click the <b>&#8594;</b> on a row to open it in the row inspector. User Manager (Oracle): create, lock, unlock, expire, reset and drop users while connected as SYSTEM. <kbd>Ctrl</kbd>+<kbd>K</kbd> opens the command palette.</p>
+    <div class="row end"><button class="primary" id="helpClose" type="button">Close</button></div>
+  </div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 <script src="app.js"></script>
 <script src="oracle.js"></script>
+<script src="mysql.js"></script>
+<script src="users.js"></script>
 </body>
 </html>

@@ -64,13 +64,24 @@ public class DbController {
         return svc.preview(id, table);
     }
 
+    /** body: query, mode (single | current | script), offset, maxRows, timeout (seconds), stopOnError */
     @PostMapping("/connections/{id}/query")
-    public Map<String, Object> query(@PathVariable String id, @RequestBody Map<String, String> body) throws Exception {
-        return svc.run(id, body.getOrDefault("query", ""));
+    public Map<String, Object> query(@PathVariable String id, @RequestBody Map<String, Object> b) throws Exception {
+        String q = b.get("query") instanceof String s ? s : "";
+        String mode = b.get("mode") instanceof String m ? m : "single";
+        int maxRows = Math.max(1, Math.min(num(b, "maxRows", 1000), 100000));
+        return svc.exec(id, q, mode, num(b, "offset", 0), maxRows, Math.max(0, num(b, "timeout", 0)), !Boolean.FALSE.equals(b.get("stopOnError")));
+    }
+
+    @PostMapping("/connections/{id}/cancel")
+    public Map<String, Object> cancel(@PathVariable String id) throws Exception { return Map.of("cancelled", svc.cancel(id)); }
+
+    private static int num(Map<String, Object> b, String k, int d) {
+        return b.get(k) instanceof Number n ? n.intValue() : d;
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> error(Exception e) {
-        return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
+        return ResponseEntity.badRequest().body(Map.of("error", DbService.describe(e)));
     }
 }
