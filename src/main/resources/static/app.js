@@ -1,4 +1,4 @@
-// DBFusion vr.1.2.0 - main workbench: connections, SQL worksheets, results, browser editing, administration
+// DBFusion vr.1.5.0 - main workbench: connections, SQL worksheets, results, browser editing, administration
 const $ = s => document.querySelector(s);
 const esc = v => String(v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const store = {
@@ -215,6 +215,7 @@ function renderTables() {
   const ul = $('#schema'), f = $('#tfilter').value.toLowerCase();
   const list = tables.filter(t => t.toLowerCase().includes(f));
   if (!active) ul.innerHTML = '<li class="empty">Select a connection.</li>';
+  else if (active.type === 'mysql' && !$('#bDb').value) ul.innerHTML = '<li class="empty">Choose a database above to see its tables.</li>';
   else if (!list.length) ul.innerHTML = '<li class="empty">Nothing to show.</li>';
   else {
     ul.innerHTML = '';
@@ -229,6 +230,29 @@ function renderTables() {
 }
 $('#tfilter').oninput = renderTables;
 
+// MySQL: list every database (schema) this user can see, and let the browser switch between them
+async function loadDbList() {
+  const bar = $('#bDbBar'); bar.hidden = active?.type !== 'mysql';
+  if (bar.hidden) return;
+  try {
+    const d = await api(`/connections/${active.id}/mysql/databases`);
+    $('#bDb').innerHTML = (d.current ? '' : '<option value="" selected>Select a database…</option>') +
+      d.rows.map(r => `<option${r[0] === d.current ? ' selected' : ''}>${esc(r[0])}</option>`).join('');
+    if (!d.rows.length) setStatus('This MySQL user can not see any database. Ask an admin to GRANT privileges on your schemas.', true);
+  } catch (e) { setStatus(e.message, true); }
+}
+$('#bDbReload').onclick = loadDbList;
+$('#bDb').onchange = async e => {
+  if (!e.target.value || !active) return;
+  try {
+    const r = await api(`/connections/${active.id}/mysql/use`, { method: 'POST', body: JSON.stringify({ database: e.target.value }) });
+    active.name = r.name; renderConns(); colCache = {};
+    tables = await api(`/connections/${active.id}/schema`); renderTables();
+    if (typeof mLoad === 'function') mLoad();
+    setStatus(`Now using database ${e.target.value}.`);
+  } catch (err) { setStatus(err.message, true); }
+};
+
 async function select(c) {
   active = c; colCache = {}; renderConns();
   $('#active').textContent = 'User: ' + (c.user || '').toUpperCase(); $('#active').classList.add('live'); $('#active').title = `${c.type}: ${c.name}`;
@@ -237,7 +261,7 @@ async function select(c) {
   if (t && (t.text === SAMPLE.sql || t.text === SAMPLE.mongo)) t.text = isMongo() ? SAMPLE.mongo : SAMPLE.sql;
   setText(t.text);
   try { tables = await api(`/connections/${c.id}/schema`); } catch (e) { tables = []; setStatus(e.message, true); }
-  renderTables();
+  renderTables(); loadDbList();
 }
 async function browse(name) {
   setStatus('Loading ' + name + '…');
@@ -659,7 +683,7 @@ const gridHtml = r => r.columns
     r.rows.map(row => '<tr>' + row.map(v => v === null ? '<td><i>null</i></td>' : `<td title="${esc(v)}">${esc(v)}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>' : '<p class="empty">No rows.</p>')
   : `<p class="empty">${r.updateCount} rows changed.</p>`;
 
-const APP = { name: 'DBFusion', version: 'vr.1.2.0' };
+const APP = { name: 'DBFusion', version: 'vr.1.5.0' };
 async function about() {
   const box = $('#adminResult'); go('admin', NAMES.about);
   const lines = [`${APP.name} Database System ${APP.version}`, 'Engines: PostgreSQL, MySQL, Oracle, MongoDB',
@@ -725,8 +749,9 @@ const cmdk = $('#cmdk'); let cmdItems = [], cmdSel = 0;
 function paletteItems() {
   const it = [], page = (p, label, hint) => it.push({ label: 'Go to ' + label, hint: hint || 'page', run: () => go(p) });
   page('home', 'Home'); page('dev', 'Developer (about the author)'); page('admin', 'Administration'); page('browser', 'Object Browser'); page('sql', 'SQL Commands');
+  if (!active || ['mysql', 'postgresql', 'oracle'].includes(active.type)) page('design', 'Designer (databases and tables)');
   if (!active || active.type === 'oracle') { page('oracle', 'Oracle Tools'); page('users', 'Oracle User Manager'); }
-  if (!active || active.type === 'mysql') page('mysql', 'MySQL Tools');
+  if (!active || active.type === 'mysql') { page('wb', 'MySQL Workbench'); page('mysql', 'MySQL Tools'); }
   it.push({ label: 'New connection', hint: 'action', run: () => openDialog() });
   it.push({ label: 'Switch light/dark theme', hint: 'action', run: () => $('#theme').click() });
   it.push({ label: 'New worksheet', hint: 'action', run: () => { go('sql'); newTab(); } });
@@ -765,5 +790,5 @@ window.addEventListener('beforeunload', () => { saveTab(); store.set('tabs', tab
 
 // After a successful connection, open Administration like the Express home flow
 const baseSelect = select;
-select = async c => { await baseSelect(c); if (!$('#p-home').hidden) go('admin'); };
+select = async c => { await baseSelect(c); if (!$('#p-home').hidden) go(c.type === 'mysql' ? 'wb' : 'admin'); };
 go('home');

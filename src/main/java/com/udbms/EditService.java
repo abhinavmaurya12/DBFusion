@@ -33,7 +33,7 @@ public class EditService {
     private static String q(String Q, String n) { return Q + ident(n) + Q; }
     private static String[] scope(DbService.Session s) {
         return new String[]{ s.type().equals("mysql") ? s.db() : null,
-            switch (s.type()) { case "postgresql" -> "public"; case "oracle" -> s.user().toUpperCase(); default -> null; } };
+            switch (s.type()) { case "postgresql" -> DbService.curSchema(s, "public"); case "oracle" -> DbService.curSchema(s, s.user().toUpperCase()); default -> null; } };
     }
 
     public Map<String, Object> columns(String id, String table) throws Exception {

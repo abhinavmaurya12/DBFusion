@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DBFusion vr.1.2.0</title>
+<title>DBFusion vr.1.5.0</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header id="top">
-  <div class="logo"><img class="mark" src="logo-mark.svg" alt="" width="34" height="34"><span>DBFusion</span><span class="ver">vr.1.2.0</span></div>
+  <div class="logo"><img class="mark" src="logo-mark.svg" alt="" width="34" height="34"><span>DBFusion</span><span class="ver">vr.1.5.0</span></div>
   <div class="links">
     <button id="cmdBtn" class="ghost" title="Command palette (Ctrl+K)"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search commands</span><kbd>Ctrl K</kbd></button>
     <span id="active">User: none</span>
@@ -27,6 +27,8 @@
   <a href="#" data-p="sql"><svg class="i" viewBox="0 0 24 24"><path d="M4 17l6-5-6-5M12 19h8"/></svg>SQL Commands</a>
   <a href="#" data-p="oracle"><svg class="i" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Oracle Tools</a>
   <a href="#" data-p="users"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M21.5 20c0-2.7-1.6-4.7-4.2-5.5"/></svg>User Manager</a>
+  <a href="#" data-p="design"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></svg>Designer</a>
+  <a href="#" data-p="wb"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="8" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/></svg>MySQL Workbench</a>
   <a href="#" data-p="mysql"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/></svg>MySQL Tools</a>
 </nav>
 <div id="crumbs"></div>
@@ -87,6 +89,7 @@
   <section class="page" id="p-browser" hidden>
     <div class="tree box">
       <h4 id="schemaTitle">Tables</h4>
+      <div class="treebar" id="bDbBar" hidden><select id="bDb" aria-label="MySQL database"></select><button id="bDbReload" title="Reload databases">Reload</button></div>
       <div class="treebar"><input id="tfilter" placeholder="Filter" aria-label="Filter tables"><button id="newTable" title="Create a table">New table</button></div>
       <ul id="schema" class="plain"><li class="empty">Select a connection.</li></ul>
     </div>
@@ -203,6 +206,30 @@
     </div>
   </section>
 
+  <section class="page" id="p-design" hidden>
+    <div class="box dnav">
+      <h4><span id="dLabel">Databases</span><button id="dReload" class="mini" title="Reload">Reload</button></h4>
+      <div class="treebar"><select id="dCont" aria-label="Database or schema"></select></div>
+      <div class="treebar dbtns" id="dContBtns"></div>
+      <div class="treebar"><label class="switch sm" style="margin:0"><input type="checkbox" id="dSys"><span></span>Show system</label></div>
+      <div class="dcur" id="dCur"></div>
+      <details id="dPg" hidden><summary>Databases on this server <button class="mini" data-a="dbNew">New</button></summary><ul class="plain"></ul></details>
+      <div class="treebar"><input id="dFilter" placeholder="Filter tables" aria-label="Filter tables"><button id="dNewTable">New table</button></div>
+      <ul id="dTables" class="plain"><li class="empty">Connect to a database (Home).</li></ul>
+    </div>
+    <div class="dmain" id="dMain"><p class="empty">Connect to a MySQL, PostgreSQL or Oracle database (Home) to design databases and tables.</p></div>
+  </section>
+
+  <section class="page" id="p-wb" hidden>
+    <div class="box wbnav">
+      <h4>Navigator <span><button id="wbNew" class="mini" title="Create a new schema">+ Schema</button> <button id="wbRefresh" class="mini" title="Reload schemas">Reload</button></span></h4>
+      <div class="treebar"><input id="wbFilter" placeholder="Filter schemas and tables" aria-label="Filter schemas"></div>
+      <div class="treebar"><label class="switch sm" style="margin:0"><input type="checkbox" id="wbSys"><span></span>Show system schemas</label></div>
+      <ul id="wbTree" class="plain wbtree"><li class="empty">Connect to a MySQL server (Home) to see its schemas.</li></ul>
+    </div>
+    <div class="wbmain" id="wbMain"><p class="empty">Connect to a MySQL server (Home) to see its schemas.</p></div>
+  </section>
+
   <section class="page" id="p-mysql" hidden>
     <div class="tree box">
       <h4>Schema objects</h4>
@@ -248,7 +275,7 @@
   </section>
 </div>
 
-<footer id="foot">DBFusion vr.1.2.0 &middot; Ctrl+Enter runs the statement at the cursor &middot; F5 runs the whole script &middot; Ctrl+K opens commands</footer>
+<footer id="foot">DBFusion vr.1.5.0 &middot; Ctrl+Enter runs the statement at the cursor &middot; F5 runs the whole script &middot; Ctrl+K opens commands</footer>
 
 <dialog id="dlg">
   <form method="dialog" id="form">
@@ -294,6 +321,26 @@
   </form>
 </dialog>
 
+<dialog id="dSql" class="wide">
+  <form method="dialog" id="dSqlF">
+    <h3 id="dSqlT">Review SQL</h3>
+    <div class="body">
+      <pre id="dSqlPre" class="sqlpre"></pre>
+      <p id="dSqlWarn" class="hint"></p>
+      <label id="dSqlTypeRow" hidden>Type <b id="dSqlName"></b> to confirm <input id="dSqlType" autocomplete="off"></label>
+      <div class="row end"><button type="button" id="dSqlCopy">Copy</button><button type="button" id="dSqlNo">Cancel</button><button class="primary" id="dSqlYes">Run</button></div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dGate">
+  <h3>Connect a database first</h3>
+  <div class="body">
+    <p>This feature needs an open database connection. Connect to MySQL, PostgreSQL, Oracle or MongoDB on the Home page, then every tab and button is available.</p>
+    <div class="row end"><button type="button" id="gateClose">Close</button><button type="button" class="primary" id="gateNew">New connection</button></div>
+  </div>
+</dialog>
+
 <dialog id="dUser" class="wide">
   <form id="uForm" method="dialog" autocomplete="off">
     <h3>Create Oracle user <small id="uWho"></small></h3>
@@ -324,5 +371,8 @@
 <script src="oracle.js"></script>
 <script src="mysql.js"></script>
 <script src="users.js"></script>
+<script src="workbench.js"></script>
+<script src="design.js"></script>
+<script src="gate.js"></script>
 </body>
 </html>

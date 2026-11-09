@@ -105,6 +105,12 @@ public class DbService {
         return n.name();
     }
 
+    /** The schema this connection currently works in (the Designer can switch it), or the fallback if the driver cannot say. */
+    static String curSchema(Session s, String fallback) {
+        try { String x = s.jdbc().getSchema(); return x == null || x.isBlank() ? fallback : x; }
+        catch (SQLException | RuntimeException e) { return fallback; }
+    }
+
     public List<String> schema(String id) throws Exception {
         Session s = get(id);
         List<String> names = new ArrayList<>();
@@ -115,8 +121,8 @@ public class DbService {
         if (s.type().equals("mysql") && blank(s.db())) return names;   // no database selected yet
         String catalog = s.type().equals("mysql") ? s.db() : null;
         String schema = switch (s.type()) {
-            case "postgresql" -> "public";
-            case "oracle" -> s.user().toUpperCase();
+            case "postgresql" -> curSchema(s, "public");
+            case "oracle" -> curSchema(s, s.user().toUpperCase());
             default -> null;
         };
         try (ResultSet rs = s.jdbc().getMetaData().getTables(catalog, schema, "%", new String[]{"TABLE", "VIEW"})) {

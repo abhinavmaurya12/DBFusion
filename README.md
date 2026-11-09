@@ -59,3 +59,21 @@ API additions (all under `/api/connections/{id}`):
 - Connection dialog: Oracle service name, `sid:XE`, full TNS descriptor, and "Connect as SYSDBA/SYSOPER".
 
 **UI**: command palette (Ctrl+K), icon navigation, toasts, row inspector, export menu (CSV, JSON, INSERT script, TSV, Markdown), SQL formatter (Ctrl+Shift+F), column and alias autocomplete, worksheets that survive a reload, dark mode that follows your system.
+
+## DBFusion vr.1.5.0 - Designer (MySQL, PostgreSQL, Oracle)
+Tab **Designer**: change databases and tables with the same screens on all three engines. Every change shows its SQL first and runs only after you confirm; dropping asks you to type the name.
+- **Databases / schemas**: MySQL database = PostgreSQL schema = Oracle schema (user). Create, rename, drop, MySQL character set. PostgreSQL also manages server databases. Oracle schemas are users: use the User Manager.
+- **Tables**: create, rename, duplicate, empty (truncate), drop.
+- **Columns**: add, drop, rename, change type / NULL / default.
+- **Indexes and keys**: index, unique, primary key, foreign key (with ON DELETE), drop.
+- **Edit data** opens the table in the Object Browser (double-click cells, add/delete rows); it switches the connection to that database/schema first.
+- API: `/api/connections/{id}/design/{overview,tables,table,apply,use}`. `apply` takes `{op, container, table, ..., dryRun}`. SQL is built in `DdlBuilder.java`.
+- Notes: MySQL "rename database" moves the tables to a new database (refused if it has views/routines/events). PostgreSQL DDL waits for Commit when Auto-commit is off; CREATE/DROP DATABASE need Auto-commit on. Oracle DDL commits by itself. Oracle identity columns need 12c+.
+
+### Designer, advanced features
+- **Views**: New view / Edit view / Drop view (one SELECT; `CREATE OR REPLACE VIEW`).
+- **Check constraints**: add and drop (tab "Checks"). MySQL needs 8.0.19+.
+- **Comments**: table comment and column comments (MySQL `COMMENT`, PostgreSQL/Oracle `COMMENT ON`), shown in the Columns tab.
+- **DDL tab**: the CREATE statement of a table or view (MySQL `SHOW CREATE`, Oracle `DBMS_METADATA`, PostgreSQL rebuilt from the structure), with Copy.
+- **ER diagram**: tables and foreign keys of the selected database/schema (first 40 tables), Download SVG.
+- API additions: `design/ddl`, `design/view`, `design/erd`; `apply` ops `createView dropView addCheck dropCheck commentTable commentColumn`.

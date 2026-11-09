@@ -74,7 +74,7 @@ $('#mDb').onchange = async e => {
     const r = await post('/mysql/use', { database: e.target.value });
     active.name = r.name; renderConns(); mPick = null; $('#mTabs').innerHTML = '';
     $('#mBody').innerHTML = '<p class="empty">Pick an object to see its details.</p>';
-    tables = await api(`/connections/${active.id}/schema`); renderTables(); await mLoad(); setStatus(`Now using database ${e.target.value}.`);
+    tables = await api(`/connections/${active.id}/schema`); renderTables(); await mLoad(); loadDbList(); setStatus(`Now using database ${e.target.value}.`);
   } catch (err) { setStatus(err.message, true); }
 };
 
@@ -122,6 +122,7 @@ function syncTabs() {
   document.querySelector('#tabs [data-p=oracle]').hidden = !!active && !isOra();
   document.querySelector('#tabs [data-p=mysql]').hidden = !!active && !isMy();
   document.querySelector('#tabs [data-p=users]').hidden = !!active && !isOra();
+  document.querySelector('#tabs [data-p=wb]').hidden = !!active && !isMy();
   const ul = document.querySelector('#tUserLi'); if (ul) ul.hidden = !isOra();
 }
 const _go2 = go; go = (p, x) => { _go2(p, x); if (p === 'mysql') mLoad(); syncTabs(); };

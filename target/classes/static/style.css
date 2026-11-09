@@ -1,4 +1,4 @@
-/* DBFusion vr.1.2.0 - light/dark themes */
+/* DBFusion vr.1.5.0 - light/dark themes */
 :root{--bg:#f2f5fb;--panel:#fff;--panel2:#eff3fa;--ink:#0f1b33;--muted:#5b6b88;--line:#dde4f0;--link:#3157d5;
 --a1:#14b8a6;--a2:#5b5bf0;--grad:linear-gradient(120deg,var(--a1),var(--a2));--bad:#d6264b;--bad-bg:#fde8ed;--ok-bg:#e2f6ef;--ok:#0b7a5c;--warn:#a65f00;--warn-bg:#fff3d9;
 --hover:#e8eefb;--sel:#dbe4ff;--shadow:0 1px 2px rgba(15,27,51,.05),0 10px 30px rgba(15,27,51,.07);--r:12px;
@@ -252,3 +252,49 @@ dialog[open]{animation:pop .16s ease-out}@keyframes pop{from{opacity:0;transform
 .devgrid .inner p{margin:0;line-height:1.65}.proj .inner p{margin:8px 0 14px}
 .devh{margin:6px 0 10px;font-size:15px}
 @media(max-width:900px){.devhero{flex-direction:column}.devgrid,.devgrid.two{grid-template-columns:1fr}}
+
+/* MySQL Workbench */
+#p-wb{display:grid;grid-template-columns:310px minmax(0,1fr);gap:14px;min-height:0}
+.wbnav{display:flex;flex-direction:column;min-height:0}.wbnav h4 span{display:flex;gap:4px}
+.wbtree{flex:1;min-height:0;overflow:auto}
+.wbtree li{padding:4px 8px}
+.wbtree li.wbs{font-weight:700}.wbtree li.wbs small{font-weight:500;color:var(--muted)}
+.wbtree .car{width:16px;color:var(--muted);font-style:normal;text-align:center;flex:none}.wbtree .car:hover{color:var(--a2)}
+.wbtree li.wbg{cursor:default;margin:6px 0 0 22px;padding:1px 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.wbtree li.wbg:hover{background:none}
+.wbtree li.wbn{margin-left:28px;font:12.5px var(--mono)}.wbtree li.wbn.r{cursor:default}.wbtree li.wbn.empty{font:12px var(--sans)}
+.wbmain{min-width:0;min-height:0;overflow:auto;display:flex;flex-direction:column}
+.wbhead{display:flex;align-items:center;gap:8px;flex:none;margin-bottom:10px;flex-wrap:wrap}
+.wbhead h3{margin:0;font-size:16px}.wbhead h3 small{color:var(--muted);font-weight:500;margin-left:6px}
+.wbstats{display:flex;gap:18px;flex:none;flex-wrap:wrap;padding:10px 14px;margin-bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);color:var(--muted)}.wbstats b{color:var(--ink)}
+.wbmain .scroll{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.wbcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.wbcard{padding:14px 16px;border:1px solid var(--line);background:var(--panel);border-radius:var(--r);box-shadow:var(--shadow);cursor:pointer;transition:transform .15s,border-color .15s}
+.wbcard:hover{transform:translateY(-2px);border-color:var(--a2)}
+.wbcard .t{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px}
+.wbcard .st{display:flex;gap:14px;color:var(--muted);margin-bottom:8px}.wbcard .st b{color:var(--ink)}
+.wbcard .bar{height:5px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:6px}.wbcard .bar i{display:block;height:100%;background:var(--grad)}
+.wbcard small{color:var(--muted)}
+.wbtabs{flex:none}.wbpane{flex:1;border-radius:0 var(--r) var(--r) var(--r)}
+@media(max-width:900px){#p-wb{grid-template-columns:minmax(0,1fr)}}
+
+/* Designer */
+#p-design{display:grid;grid-template-columns:310px minmax(0,1fr);gap:14px;min-height:0}
+.dnav{display:flex;flex-direction:column;min-height:0}
+.dbtns{flex-wrap:wrap}.dcur{padding:0 10px 8px;font-size:12px;color:var(--muted)}.dcur b{color:var(--ink)}
+#dPg{padding:0 10px 6px}#dPg summary{cursor:pointer;font-weight:600;display:flex;align-items:center;gap:8px}#dPg ul{padding:4px 0}
+#dTables{flex:1;min-height:0;overflow:auto}
+.dmain{min-width:0;min-height:0;overflow:auto;display:flex;flex-direction:column}
+.dpane{padding:10px}.dpane .scroll{border:1px solid var(--line);border-radius:var(--r)}.dtools{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+td.act{text-align:right}.dnote{margin:0 0 8px}
+.dcol,.dcolhead{display:grid;grid-template-columns:1.3fr 1.3fr 1fr repeat(4,auto);gap:6px;align-items:center;margin-bottom:6px}
+.dcol input:not([type=checkbox]){margin:0;min-width:0}.dcol label.chk{margin:0}
+.dcolhead{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:8px}.dcolhead span:nth-child(n+4){text-align:center}
+.sqlpre{font:12.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:46vh;overflow:auto;margin:0 0 10px}
+#d2b .dcol label.chk{display:flex}
+@media(max-width:900px){#p-design{grid-template-columns:minmax(0,1fr)}}
+.erdbox{overflow:auto;padding:0;background:#f2f5fb}.erdbox svg{display:block}
+.dpane pre.sqlpre{max-height:none}
+
+/* connection gate: looks disabled, still clickable so it can explain why */
+.locked{opacity:.4;cursor:not-allowed!important;filter:grayscale(.6)}
+#tabs a.locked:hover,.links a.locked:hover,.links button.locked:hover{background:none}
